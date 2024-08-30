@@ -14,14 +14,22 @@ const io = new Server(server, {
 interface Player {
   id: string;
   name: string;
-  board: string[][];
+  board: (string | null)[][];
 }
 
 let players: Record<string, Player> = {};
 let games: Record<string, any> = {};
+const readyPlayers: { [key: string]: boolean } = {};
 
 io.on("connection", (socket: Socket) => {
   console.log("a user connected:", socket.id);
+
+  socket.on("playerReady", () => {
+    readyPlayers[socket.id] = true;
+    if (Object.keys(readyPlayers).length === 2) {
+      io.emit("startGame");
+    }
+  });
 
   socket.on("setName", (name: string) => {
     if (players[socket.id]) {
@@ -52,6 +60,7 @@ io.on("connection", (socket: Socket) => {
   socket.on("disconnect", () => {
     console.log("user disconnected");
     delete players[socket.id];
+    delete readyPlayers[socket.id]; // Clear the player's ready status on disconnect
     io.emit(
       "updatePlayers",
       Object.values(players).map((player) => ({
@@ -62,8 +71,8 @@ io.on("connection", (socket: Socket) => {
   });
 });
 
-function initializeBoard(): string[][] {
-  return Array(10).fill(Array(10).fill(null));
+function initializeBoard(): (string | null)[][] {
+  return Array.from({ length: 10 }, () => Array(10).fill(null));
 }
 
 server.listen(3001, () => {
