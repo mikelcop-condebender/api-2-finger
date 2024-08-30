@@ -13,6 +13,7 @@ const io = new Server(server, {
 
 interface Player {
   id: string;
+  name: string;
   board: string[][];
 }
 
@@ -22,27 +23,42 @@ let games: Record<string, any> = {};
 io.on("connection", (socket: Socket) => {
   console.log("a user connected:", socket.id);
 
+  socket.on("setName", (name: string) => {
+    if (players[socket.id]) {
+      players[socket.id].name = name;
+    } else {
+      players[socket.id] = { id: socket.id, name, board: initializeBoard() };
+    }
+
+    console.log("SERVER SETNAME", name, { players });
+
+    const playerNames = Object.values(players).map((player) => ({
+      id: player.id,
+      name: player.name,
+    }));
+
+    console.log({ playerNames });
+
+    io.emit("updatePlayers", playerNames);
+  });
+
   socket.on("startGame", () => {
-    players[socket.id] = { id: socket.id, board: initializeBoard() };
+    console.log("PLAYERS", Object.keys(players).length, players);
     if (Object.keys(players).length === 2) {
       io.emit("gameStart");
     }
   });
 
-  socket.on(
-    "placeShip",
-    (data: { ship: string; orientation: string; row: number; col: number }) => {
-      // Handle ship placement
-    }
-  );
-
-  socket.on("makeMove", (data: { row: number; col: number }) => {
-    // Handle making a move
-  });
-
   socket.on("disconnect", () => {
     console.log("user disconnected");
     delete players[socket.id];
+    io.emit(
+      "updatePlayers",
+      Object.values(players).map((player) => ({
+        id: player.id,
+        name: player.name,
+      }))
+    );
   });
 });
 
