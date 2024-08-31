@@ -1,12 +1,19 @@
 import express from "express";
 import http from "http";
 import { Server, Socket } from "socket.io";
+import * as dotenv from "dotenv";
+
+dotenv.config();
+
+// Now you can access the environment variables
+const port = process.env.PORT || 3001;
+const baseUrl = process.env.ABASE_URL || "default_url";
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: baseUrl,
     methods: ["GET", "POST"],
   },
 });
@@ -228,6 +235,6 @@ io.on("connection", (socket: Socket) => {
   });
 });
 
-server.listen(3001, () => {
-  console.log("listening on *:3001");
+server.listen(port, () => {
+  console.log(`listening on *:${port}`);
 });
