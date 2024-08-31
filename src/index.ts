@@ -15,6 +15,7 @@ interface Player {
   id: string;
   name: string;
   board: (string | null)[][];
+  ships: { [key: string]: { positions: [number, number][] } }; // Track ship positions
 }
 
 interface Game {
@@ -44,7 +45,12 @@ io.on("connection", (socket: Socket) => {
     if (players[socket.id]) {
       players[socket.id].name = name;
     } else {
-      players[socket.id] = { id: socket.id, name, board: initializeBoard() };
+      players[socket.id] = {
+        id: socket.id,
+        name,
+        board: initializeBoard(),
+        ships: {},
+      };
     }
 
     const playerNames = Object.values(players).map((player) => ({
@@ -67,12 +73,23 @@ io.on("connection", (socket: Socket) => {
     const player = players[socket.id];
     if (player) {
       const shipLength = ship === "battleship" ? 4 : 3;
+      const positions: [number, number][] = [];
+
       for (let i = 0; i < shipLength; i++) {
         if (orientation === "horizontal") {
           player.board[row][col + i] = ship;
+          positions.push([row, col + i]);
         } else if (orientation === "vertical") {
           player.board[row + i][col] = ship;
+          positions.push([row + i, col]);
         }
+      }
+
+      // Store ship positions
+      if (!player.ships[ship]) {
+        player.ships[ship] = { positions };
+      } else {
+        player.ships[ship].positions.push(...positions);
       }
 
       io.to(socket.id).emit("shipPlaced", { ship, orientation, row, col });
@@ -134,20 +151,32 @@ io.on("connection", (socket: Socket) => {
   }
 
   function updateGameState() {
-    // Example: Check if any player has won
     for (const playerId in players) {
       const player = players[playerId];
       const opponentId = getOpponentId(playerId);
       if (opponentId && players[opponentId]) {
-        // Check if the opponent's board is all hits
-        const opponentBoard = players[opponentId].board;
-        const isGameOver = opponentBoard.every((row) =>
-          row.every((cell) => cell === "miss")
-        );
+        const opponent = players[opponentId];
 
-        if (isGameOver) {
-          io.to(playerId).emit("endGame", player.name);
-          io.to(opponentId).emit("endGame", player.name);
+        // Check if all ship positions are hit
+        let allShipsSunk = true;
+        for (const ship in opponent.ships) {
+          const positions = opponent.ships[ship].positions;
+          const allHit = positions.every(
+            ([row, col]) => opponent.board[row][col] === "miss"
+          );
+
+          if (!allHit) {
+            allShipsSunk = false;
+            break;
+          }
+        }
+
+        if (allShipsSunk) {
+          console.log("GAME OVER");
+          const winnerName = players[playerId].name;
+          io.to(playerId).emit("endGame", { winner: winnerName });
+          io.to(opponentId).emit("endGame", { winner: winnerName });
+
           // Optionally, remove the game from `games` and handle game over logic
           const gameId = getGameId(playerId);
           if (gameId !== null) {
