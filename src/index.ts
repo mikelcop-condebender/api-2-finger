@@ -1,13 +1,14 @@
 import express from "express";
 import http from "http";
 import { Server, Socket } from "socket.io";
+
 import * as dotenv from "dotenv";
 
 dotenv.config();
 
 // Now you can access the environment variables
-const port = 3001;
-const baseUrl = process.env.ABASE_URL || "default_url";
+const port = process.env.PORT || 3001;
+const baseUrl = process.env.BASE_URL || "default_url";
 
 const app = express();
 const server = http.createServer(app);
@@ -34,18 +35,14 @@ let players: Record<string, Player> = {};
 let games: Record<string, Game> = {};
 const readyPlayers: { [key: string]: boolean } = {};
 
-function initializeBoard(): (string | null)[][] {
-  return Array.from({ length: 10 }, () => Array(10).fill(null));
-}
-
 // Health check endpoint
 app.get("/health", (req, res) => {
   res.status(200).send({ status: "UP" });
 });
 
-io.on("connect_error", (err) => {
-  console.log(`connect_error due to ${err.message}`);
-});
+function initializeBoard(): (string | null)[][] {
+  return Array.from({ length: 10 }, () => Array(10).fill(null));
+}
 
 io.on("connection", (socket: Socket) => {
   console.log("a user connected:", socket.id);
@@ -207,7 +204,6 @@ io.on("connection", (socket: Socket) => {
         }
 
         if (allShipsSunk) {
-          console.log("GAME OVER");
           const winnerName = players[playerId].name;
           io.to(playerId).emit("endGame", { winner: winnerName });
           io.to(opponentId).emit("endGame", { winner: winnerName });
