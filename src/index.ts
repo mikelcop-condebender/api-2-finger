@@ -61,6 +61,25 @@ io.on("connection", (socket: Socket) => {
     io.emit("updatePlayers", playerNames);
   });
 
+  socket.on("joinGame", (name: string) => {
+    console.log(`${name} join the game`);
+    // if (players[socket.id]) {
+    //   players[socket.id].name = name;
+    // } else {
+    //   players[socket.id] = {
+    //     id: socket.id,
+    //     name,
+    //     board: initializeBoard(),
+    //     ships: {},
+    //   };
+    // }
+    // const playerNames = Object.values(players).map((player) => ({
+    //   id: player.id,
+    //   name: player.name,
+    // }));
+    io.emit("joinGame", true);
+  });
+
   socket.on("startGame", () => {
     if (Object.keys(players).length === 2) {
       io.emit("gameStart");
