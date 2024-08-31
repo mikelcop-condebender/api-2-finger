@@ -6,7 +6,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 // Now you can access the environment variables
-const port = process.env.PORT || 3001;
+const port = 3001;
 const baseUrl = process.env.ABASE_URL || "default_url";
 
 const app = express();
@@ -37,6 +37,15 @@ const readyPlayers: { [key: string]: boolean } = {};
 function initializeBoard(): (string | null)[][] {
   return Array.from({ length: 10 }, () => Array(10).fill(null));
 }
+
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.status(200).send({ status: "UP" });
+});
+
+io.on("connect_error", (err) => {
+  console.log(`connect_error due to ${err.message}`);
+});
 
 io.on("connection", (socket: Socket) => {
   console.log("a user connected:", socket.id);
