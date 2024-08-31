@@ -66,12 +66,6 @@ io.on("connection", (socket: Socket) => {
   socket.on("placeShip", ({ ship, orientation, row, col }) => {
     const player = players[socket.id];
     if (player) {
-      // Here you should add logic to place the ship on the board
-      // This is a simplified example assuming a basic ship placement
-      // Ensure that your ship placement logic is comprehensive
-
-      // For simplicity, this example just marks the cells on the board
-      console.log("SHIP", ship);
       const shipLength = ship === "battleship" ? 4 : 3;
       for (let i = 0; i < shipLength; i++) {
         if (orientation === "horizontal") {
@@ -81,7 +75,6 @@ io.on("connection", (socket: Socket) => {
         }
       }
 
-      console.log("Ship placed:", { ship, orientation, row, col });
       io.to(socket.id).emit("shipPlaced", { ship, orientation, row, col });
     }
   });
@@ -93,36 +86,35 @@ io.on("connection", (socket: Socket) => {
     if (player && opponentId && players[opponentId]) {
       const opponentBoard = players[opponentId].board;
 
-      // Ensure row and col are within bounds
       if (row >= 0 && row < 10 && col >= 0 && col < 10) {
         const cell = opponentBoard[row][col];
         let result: "hit" | "miss";
 
         if (cell && cell !== "miss") {
-          // Hit
           result = "hit";
           opponentBoard[row][col] = "miss"; // Mark cell as hit
         } else {
-          // Miss
           result = "miss";
         }
 
-        console.log("SERVER MAKE MOVE", { socketId: socket.id, opponentId });
         io.to(socket.id).emit("attackResult", {
           row,
           col,
           result,
+          target: "player", // Indicates that this player is the attacker
           socketId: socket.id,
           opponentId: opponentId,
         });
-        // io.to(opponentId).emit("attackResult", {
-        //   row,
-        //   col,
-        //   result,
-        //   attackerId: opponentId,
-        // });
 
-        // Optionally, update game state after each move
+        io.to(opponentId).emit("attackResult", {
+          row,
+          col,
+          result,
+          target: "opponent", // Indicates that this player is the defender
+          socketId: socket.id,
+          opponentId: opponentId,
+        });
+
         updateGameState();
       } else {
         console.error("Invalid move coordinates:", { row, col });
