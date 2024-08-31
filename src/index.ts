@@ -107,9 +107,20 @@ io.on("connection", (socket: Socket) => {
           result = "miss";
         }
 
-        console.log("SERVER MAKE MOVE", { row, col, result });
-        io.to(socket.id).emit("attackResult", { row, col, result });
-        io.to(opponentId).emit("attackResult", { row, col, result });
+        console.log("SERVER MAKE MOVE", { socketId: socket.id, opponentId });
+        io.to(socket.id).emit("attackResult", {
+          row,
+          col,
+          result,
+          socketId: socket.id,
+          opponentId: opponentId,
+        });
+        // io.to(opponentId).emit("attackResult", {
+        //   row,
+        //   col,
+        //   result,
+        //   attackerId: opponentId,
+        // });
 
         // Optionally, update game state after each move
         updateGameState();
