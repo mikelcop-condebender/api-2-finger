@@ -1,12 +1,10 @@
 import express from "express";
 import http from "http";
 import { Server, Socket } from "socket.io";
-
 import * as dotenv from "dotenv";
 
 dotenv.config();
 
-// Now you can access the environment variables
 const port = process.env.PORT || 3001;
 const baseUrl = process.env.BASE_URL || "default_url";
 const boxCount = 6;
@@ -24,19 +22,19 @@ interface Player {
   id: string;
   name: string;
   board: (string | null)[][];
-  ships: { [key: string]: { positions: [number, number][] } }; // Track ship positions
+  ships: { [key: string]: { positions: [number, number][] } };
 }
 
 interface Game {
   player1: string;
   player2: string;
+  currentTurn: string; // To keep track of whose turn it is
 }
 
 let players: Record<string, Player> = {};
 let games: Record<string, Game> = {};
 const readyPlayers: { [key: string]: boolean } = {};
 
-// Health check endpoint
 app.get("/health", (req, res) => {
   res.status(200).send({ status: "UP" });
 });
@@ -76,7 +74,7 @@ io.on("connection", (socket: Socket) => {
   });
 
   socket.on("joinGame", (name: string) => {
-    console.log(`${name} join the game`);
+    console.log(`${name} joined the game`);
     io.emit("joinGame", true);
   });
 
@@ -84,7 +82,15 @@ io.on("connection", (socket: Socket) => {
     if (Object.keys(players).length === 2) {
       io.emit("gameStart");
       const playerIds = Object.keys(players);
-      games["game1"] = { player1: playerIds[0], player2: playerIds[1] }; // Example game ID
+      games["game1"] = {
+        player1: playerIds[0],
+        player2: playerIds[1],
+        currentTurn: playerIds[0],
+      }; // Example game ID
+
+      // Notify players whose turn it is to start with
+      io.to(playerIds[0]).emit("yourTurn", { isYourTurn: true });
+      io.to(playerIds[1]).emit("waitForTurn", { isYourTurn: false });
     }
   });
 
@@ -103,33 +109,32 @@ io.on("connection", (socket: Socket) => {
         }
       }
 
-      // Store ship positions
       if (!player.ships[ship]) {
         player.ships[ship] = { positions };
       } else {
         player.ships[ship].positions.push(...positions);
       }
-
-      // io.to(socket.id).emit("shipPlaced", {
-      //   player,
-      //   ship,
-      //   orientation,
-      //   row,
-      //   col,
-      // });
     }
   });
 
   socket.on("makeMove", ({ row, col }) => {
     const player = players[socket.id];
+    const gameId = getGameId(socket.id);
+    if (!gameId) return;
+
+    const game = games[gameId];
     const opponentId = getOpponentId(socket.id);
 
-    if (player && opponentId && players[opponentId]) {
+    if (
+      player &&
+      opponentId &&
+      players[opponentId] &&
+      game.currentTurn === socket.id
+    ) {
       const opponentBoard = players[opponentId].board;
 
       if (row >= 0 && row < boxCount && col >= 0 && col < boxCount) {
         const cell = opponentBoard[row][col];
-
         let result: "hit" | "miss";
 
         if (cell && cell !== "miss") {
@@ -143,7 +148,7 @@ io.on("connection", (socket: Socket) => {
           row,
           col,
           result,
-          target: "player", // Indicates that this player is the attacker
+          target: "player",
           socketId: socket.id,
           opponentId: opponentId,
         });
@@ -152,17 +157,33 @@ io.on("connection", (socket: Socket) => {
           row,
           col,
           result,
-          target: "opponent", // Indicates that this player is the defender
+          target: "opponent",
           socketId: socket.id,
           opponentId: opponentId,
         });
+
+        if (result === "miss") {
+          // Switch turns only if the move was a miss
+          game.currentTurn = opponentId;
+
+          // Notify players whose turn it is
+          io.to(socket.id).emit("yourTurn", { isYourTurn: false });
+          io.to(opponentId).emit("yourTurn", { isYourTurn: true });
+        } else {
+          // If it's a hit, notify the current player they can go again
+          io.to(socket.id).emit("yourTurn", { isYourTurn: true });
+          io.to(opponentId).emit("yourTurn", { isYourTurn: false });
+        }
 
         updateGameState();
       } else {
         console.error("Invalid move coordinates:", { row, col });
       }
     } else {
-      console.error("Player or opponent not found:", { player, opponentId });
+      console.error("It's not your turn or player/opponent not found:", {
+        player,
+        opponentId,
+      });
     }
   });
 
@@ -172,17 +193,15 @@ io.on("connection", (socket: Socket) => {
       if (game.player1 === playerId) return game.player2;
       if (game.player2 === playerId) return game.player1;
     }
-    return null; // No opponent found
+    return null;
   }
 
   function updateGameState() {
     for (const playerId in players) {
-      const player = players[playerId];
       const opponentId = getOpponentId(playerId);
       if (opponentId && players[opponentId]) {
         const opponent = players[opponentId];
 
-        // Check if all ship positions are hit
         let allShipsSunk = true;
         for (const ship in opponent.ships) {
           const positions = opponent.ships[ship].positions;
@@ -197,11 +216,11 @@ io.on("connection", (socket: Socket) => {
         }
 
         if (allShipsSunk) {
-          const winnerName = players[playerId].name;
-          io.to(playerId).emit("endGame", { winner: winnerName });
-          io.to(opponentId).emit("endGame", { winner: winnerName });
+          const winnerId = players[playerId].id;
+          console.log({ winnerId });
+          io.to(playerId).emit("endGame", winnerId);
+          io.to(opponentId).emit("endGame", winnerId);
 
-          // Optionally, remove the game from `games` and handle game over logic
           const gameId = getGameId(playerId);
           if (gameId !== null) {
             delete games[gameId];
@@ -222,7 +241,7 @@ io.on("connection", (socket: Socket) => {
   socket.on("disconnect", () => {
     console.log("user disconnected");
     delete players[socket.id];
-    delete readyPlayers[socket.id]; // Clear the player's ready status on disconnect
+    delete readyPlayers[socket.id];
     io.emit(
       "updatePlayers",
       Object.values(players).map((player) => ({
