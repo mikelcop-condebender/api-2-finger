@@ -9,6 +9,7 @@ dotenv.config();
 // Now you can access the environment variables
 const port = process.env.PORT || 3001;
 const baseUrl = process.env.BASE_URL || "default_url";
+const boxCount = 6;
 
 const app = express();
 const server = http.createServer(app);
@@ -41,7 +42,7 @@ app.get("/health", (req, res) => {
 });
 
 function initializeBoard(): (string | null)[][] {
-  return Array.from({ length: 10 }, () => Array(10).fill(null));
+  return Array.from({ length: boxCount }, () => Array(boxCount).fill(null));
 }
 
 io.on("connection", (socket: Socket) => {
@@ -76,20 +77,6 @@ io.on("connection", (socket: Socket) => {
 
   socket.on("joinGame", (name: string) => {
     console.log(`${name} join the game`);
-    // if (players[socket.id]) {
-    //   players[socket.id].name = name;
-    // } else {
-    //   players[socket.id] = {
-    //     id: socket.id,
-    //     name,
-    //     board: initializeBoard(),
-    //     ships: {},
-    //   };
-    // }
-    // const playerNames = Object.values(players).map((player) => ({
-    //   id: player.id,
-    //   name: player.name,
-    // }));
     io.emit("joinGame", true);
   });
 
@@ -101,10 +88,9 @@ io.on("connection", (socket: Socket) => {
     }
   });
 
-  socket.on("placeShip", ({ ship, orientation, row, col }) => {
+  socket.on("placeShip", ({ ship, orientation, row, col, shipLength }) => {
     const player = players[socket.id];
     if (player) {
-      const shipLength = ship === "battleship" ? 4 : 3;
       const positions: [number, number][] = [];
 
       for (let i = 0; i < shipLength; i++) {
@@ -124,7 +110,13 @@ io.on("connection", (socket: Socket) => {
         player.ships[ship].positions.push(...positions);
       }
 
-      io.to(socket.id).emit("shipPlaced", { ship, orientation, row, col });
+      // io.to(socket.id).emit("shipPlaced", {
+      //   player,
+      //   ship,
+      //   orientation,
+      //   row,
+      //   col,
+      // });
     }
   });
 
@@ -135,8 +127,9 @@ io.on("connection", (socket: Socket) => {
     if (player && opponentId && players[opponentId]) {
       const opponentBoard = players[opponentId].board;
 
-      if (row >= 0 && row < 10 && col >= 0 && col < 10) {
+      if (row >= 0 && row < boxCount && col >= 0 && col < boxCount) {
         const cell = opponentBoard[row][col];
+
         let result: "hit" | "miss";
 
         if (cell && cell !== "miss") {
