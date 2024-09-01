@@ -23,6 +23,8 @@ interface Player {
   name: string;
   board: (string | null)[][];
   ships: { [key: string]: { positions: [number, number][] } };
+  points: number; // New property to track points
+  playAgain: boolean;
 }
 
 interface Game {
@@ -62,6 +64,8 @@ io.on("connection", (socket: Socket) => {
         name,
         board: initializeBoard(),
         ships: {},
+        points: 0, // Initialize points to 0
+        playAgain: false, // Initialize playAgain to false
       };
     }
 
@@ -120,6 +124,7 @@ io.on("connection", (socket: Socket) => {
   socket.on("makeMove", ({ row, col }) => {
     const player = players[socket.id];
     const gameId = getGameId(socket.id);
+
     if (!gameId) return;
 
     const game = games[gameId];
@@ -140,6 +145,7 @@ io.on("connection", (socket: Socket) => {
         if (cell && cell !== "miss") {
           result = "hit";
           opponentBoard[row][col] = "miss"; // Mark cell as hit
+          player.points += 1; // Increment points on hit
         } else {
           result = "miss";
         }
@@ -151,6 +157,7 @@ io.on("connection", (socket: Socket) => {
           target: "player",
           socketId: socket.id,
           opponentId: opponentId,
+          points: player.points, // Include updated points
         });
 
         io.to(opponentId).emit("attackResult", {
@@ -160,6 +167,7 @@ io.on("connection", (socket: Socket) => {
           target: "opponent",
           socketId: socket.id,
           opponentId: opponentId,
+          points: players[opponentId].points, // Include opponent's points for display
         });
 
         if (result === "miss") {
@@ -175,6 +183,14 @@ io.on("connection", (socket: Socket) => {
           io.to(opponentId).emit("yourTurn", { isYourTurn: false });
         }
 
+        const playerPoints = Object.values(players).map((player) => ({
+          id: player.id,
+          name: player.name,
+          points: player.points,
+        }));
+
+        io.emit("updatePlayers", playerPoints);
+
         updateGameState();
       } else {
         console.error("Invalid move coordinates:", { row, col });
@@ -184,6 +200,51 @@ io.on("connection", (socket: Socket) => {
         player,
         opponentId,
       });
+    }
+  });
+
+  socket.on("playAgain", () => {
+    if (players[socket.id]) {
+      players[socket.id].playAgain = true;
+
+      // Check if both players are ready to play again
+      const playerIds = Object.keys(players);
+      const bothPlayersReady = playerIds.every(
+        (id) => players[id].playAgain === true
+      );
+
+      if (bothPlayersReady) {
+        // Reset the game state for both players
+        playerIds.forEach((id) => {
+          resetPlayerState(id);
+        });
+
+        // Notify players that the game is restarting
+        io.emit("gameRestarted", {
+          message: "The game is restarting. Get ready!",
+        });
+
+        // io.emit("gameStart");
+
+        games["game1"] = {
+          player1: playerIds[0],
+          player2: playerIds[1],
+          currentTurn: playerIds[0],
+        }; // Example game ID
+
+        // Reset the turn to the starting player
+        const gameId = getGameId(socket.id);
+        if (!gameId) return;
+        const game = games[gameId];
+
+        if (gameId) {
+          game.currentTurn = playerIds[1]; // Set the first player as the starting turn
+        }
+
+        // Notify players whose turn it is to start with
+        // io.to(playerIds[0]).emit("yourTurn", { isYourTurn: true });
+        // io.to(playerIds[1]).emit("waitForTurn", { isYourTurn: false });
+      }
     }
   });
 
@@ -202,6 +263,7 @@ io.on("connection", (socket: Socket) => {
       if (opponentId && players[opponentId]) {
         const opponent = players[opponentId];
 
+        // Check if all ship positions are hit
         let allShipsSunk = true;
         for (const ship in opponent.ships) {
           const positions = opponent.ships[ship].positions;
@@ -217,10 +279,13 @@ io.on("connection", (socket: Socket) => {
 
         if (allShipsSunk) {
           const winnerId = players[playerId].id;
-          console.log({ winnerId });
           io.to(playerId).emit("endGame", winnerId);
           io.to(opponentId).emit("endGame", winnerId);
 
+          // Ask both players if they want to play again
+          io.emit("askPlayAgain", { message: "Do you want to play again?" });
+
+          // Optionally, remove the game from `games` and handle game over logic
           const gameId = getGameId(playerId);
           if (gameId !== null) {
             delete games[gameId];
@@ -236,6 +301,17 @@ io.on("connection", (socket: Socket) => {
       if (game.player1 === playerId || game.player2 === playerId) return gameId;
     }
     return null;
+  }
+
+  // This function will reset the state of a specific player
+  function resetPlayerState(playerId: string) {
+    if (players[playerId]) {
+      players[playerId].board = initializeBoard(); // Reset the board to its initial state
+      players[playerId].ships = {}; // Clear all ships
+      players[playerId].points = 0; // Reset points to zero
+      players[playerId].playAgain = false; // Reset the playAgain flag
+      delete readyPlayers[playerId];
+    }
   }
 
   socket.on("disconnect", () => {
