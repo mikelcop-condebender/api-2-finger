@@ -5,6 +5,7 @@ export interface Player {
   ships: { [key: string]: { positions: [number, number][] } };
   points: number;
   playAgain: boolean;
+  isWinner?: boolean;
 }
 
 export interface Game {

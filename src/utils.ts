@@ -33,3 +33,13 @@ export const emitTurnStatus = (
   io.to(currentPlayer).emit("yourTurn", { isYourTurn: true });
   io.to(opponent).emit("yourTurn", { isYourTurn: false });
 };
+
+export const getPlayerWithHighestPoints = (
+  players: Record<string, Player>
+): Player | null => {
+  return Object.values(players).reduce((highestPlayer, player) => {
+    return player.points > (highestPlayer?.points || 0)
+      ? player
+      : highestPlayer;
+  }, null as Player | null);
+};
