@@ -39,3 +39,5 @@ export interface Ship {
   size: number;
   positions: Position[];
 }
+
+export const readyPlayers: Record<string, boolean> = {};
