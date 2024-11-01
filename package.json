@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "test:coverage": "nyc mocha --require ts-node/register test/**.spec.ts",
+    "test": "mocha --timeout 30000 --require ts-node/register test/**.spec.ts",
     "build": "tsc",
     "start": "nodemon src/index.ts"
   },
@@ -20,11 +22,17 @@
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
+    "@types/chai": "^4.3.5",
+    "@types/mocha": "^10.0.1",
+    "@types/sinon": "^10.0.18",
+    "chai": "^4.3.7",
+    "mocha": "^10.2.0",
+    "nyc": "^15.1.0",
+    "sinon": "^16.0.0",
     "@types/node": "^22.5.1",
     "@types/socket.io": "^3.0.2",
     "@types/ws": "^8.5.12",
     "nodemon": "^3.1.4",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.5.4"
+    "ts-node": "^10.9.2"    
   }
 }
