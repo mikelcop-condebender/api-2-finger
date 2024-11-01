@@ -18,20 +18,7 @@ const io = new Server(server, {
   },
 });
 
-interface Player {
-  id: string;
-  name: string;
-  board: (string | null)[][];
-  ships: { [key: string]: { positions: [number, number][] } };
-  points: number; // New property to track points
-  playAgain: boolean;
-}
 
-interface Game {
-  player1: string;
-  player2: string;
-  currentTurn: string; // To keep track of whose turn it is
-}
 
 let players: Record<string, Player> = {};
 let games: Record<string, Game> = {};

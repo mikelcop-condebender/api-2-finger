@@ -1,7 +1,3 @@
-export interface Player {
-  socketId: string;
-}
-
 export interface Position {
   row: number;
   col: number;
@@ -38,4 +34,19 @@ export interface Position {
 export interface Ship {
   size: number;
   positions: Position[];
+}
+
+export interface Player {
+  id: string;
+  name: string;
+  board: (string | null)[][];
+  ships: { [key: string]: { positions: [number, number][] } };
+  points: number; // New property to track points
+  playAgain: boolean;
+}
+
+export interface Game {
+  player1: string;
+  player2: string;
+  currentTurn: string; // To keep track of whose turn it is
 }
