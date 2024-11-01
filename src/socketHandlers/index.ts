@@ -1,5 +1,4 @@
 import { Server, Socket } from "socket.io";
-import { Player, Game } from "../types/types";
 import { getGameId, getOpponentId } from "../utils";
 import { onSetName } from "./onSetNames";
 import { onPlayerReady } from "./onPlayerReady";
@@ -9,6 +8,7 @@ import { onPlaceShip } from "./onPlaceShip";
 import { onMakeMove } from "./onMakeMove";
 import { onPlaygame } from "./onPlayAgain";
 import { onDisconnect } from "./onDisconnect";
+import { Game, Player } from "../types/gameTypes";
 
 export const setupSocketHandlers = (
   games: Record<string, Game> = {},

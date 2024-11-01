@@ -1,5 +1,5 @@
 import { Server, Socket } from "socket.io";
-import { Player } from "../types/types";
+import { Player } from "../types/gameTypes";
 
 export const onSetName = (
   initializeBoard: () => (string | null)[][],

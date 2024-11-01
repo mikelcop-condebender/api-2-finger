@@ -1,5 +1,4 @@
 import { Server, Socket } from "socket.io";
-import { Player } from "../types/types";
 
 export const onPlayerReady = (
   readyPlayers: Record<string, boolean> = {},

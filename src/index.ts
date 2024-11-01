@@ -2,9 +2,9 @@ import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import notesRouter from "./notes"; // Path may need adjustment
-import { Game, Player } from "./types/types";
 import { baseUrl, boxCount, port } from "./config";
 import { setupSocketHandlers } from "./socketHandlers";
+import { Game, Player } from "./types/gameTypes";
 
 const app = express();
 const server = http.createServer(app);
