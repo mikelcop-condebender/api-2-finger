@@ -11,13 +11,13 @@ jobs:
     steps:
       - name: install ssh keys
         run: |
+          # mkdir -p ~/.ssh
+          # install -m 600 -D /dev/null ~/.ssh/id_rsa
+          # echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          # ssh-keyscan -H ${{secrets.SSH_HOST}} > ~/.ssh/known_hosts
+        run: |
           mkdir -p ~/.ssh
-          install -m 600 -D /dev/null ~/.ssh/id_rsa
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          ssh-keyscan -H ${{secrets.SSH_HOST}} > ~/.ssh/known_hosts
-        # run: |
-        #   mkdir -p ~/.ssh
-        #   echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
 
       - name: connect and pull
         # run: scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -r ./dist/* jmc@ssh-pi.2-finger.com:/home/jmc/backend/dist
