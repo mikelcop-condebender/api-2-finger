@@ -9,6 +9,7 @@ export const onStartGame = (
   players: Record<string, Player> = {}
 ) => {
   socket.on("startGame", () => {
+    console.log("startGame");
     const playerIds = Object.keys(players);
     if (playerIds.length === 2) {
       games["game1"] = {

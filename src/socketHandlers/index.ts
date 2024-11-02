@@ -1,5 +1,5 @@
 import { Server, Socket } from "socket.io";
-import { getGameId, getOpponentId } from "../utils";
+import { getGameId, getOpponentId, getPlayerWithHighestPoints } from "../utils";
 import { onSetName } from "./onSetNames";
 import { onPlayerReady } from "./onPlayerReady";
 import { onJoinGame } from "./onJoinGame";
@@ -18,12 +18,13 @@ export const setupSocketHandlers = (
   io: Server
 ) => {
   const resetPlayerState = (playerId: string) => {
+    console.log("RESET", { playerId });
     const player = players[playerId];
     if (player) {
       Object.assign(player, {
         board: initializeBoard(),
         ships: {},
-        points: 0,
+        // points: 0,
         playAgain: false,
       });
       delete readyPlayers[playerId];
@@ -43,8 +44,10 @@ export const setupSocketHandlers = (
       );
 
       if (allShipsSunk) {
-        io.to(playerId).emit("endGame", playerId);
-        io.to(opponentId).emit("endGame", playerId);
+        const highestPointPlayer = getPlayerWithHighestPoints(players);
+
+        io.to(playerId).emit("endGame", highestPointPlayer?.id);
+        io.to(opponentId).emit("endGame", highestPointPlayer?.id);
         io.emit("askPlayAgain", { message: "Do you want to play again?" });
         delete games[getGameId(games, playerId) as any];
       }
@@ -60,7 +63,7 @@ export const setupSocketHandlers = (
     onStartGame(socket, io, games, players);
     onPlaceShip(players, socket);
     onMakeMove(socket, io, games, players, updateGameState);
-    onPlaygame(socket, io, players, resetPlayerState);
+    onPlaygame(socket, io, players, resetPlayerState, games);
     onDisconnect(socket, io, players, readyPlayers);
   });
 };

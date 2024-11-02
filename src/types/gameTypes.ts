@@ -51,5 +51,4 @@ export interface Game {
   currentTurn: string;
 }
 
-
 export const readyPlayers: Record<string, boolean> = {};
