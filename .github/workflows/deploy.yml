@@ -16,6 +16,6 @@ jobs:
           ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
 
       - name: connect and pull
-        run: ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST}} "cd ${{secrets.WORK_DIR}} && git checkout ${{secrets.MAIN_BRANCH}} && git pull"
+        run: ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST}} "cd ~/backend && git checkout ${{secrets.MAIN_BRANCH}} && git pull"
       - name: cleanup
         run: rm -rf ~/.ssh
