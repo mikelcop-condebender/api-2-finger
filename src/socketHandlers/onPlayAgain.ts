@@ -13,21 +13,39 @@ export const onPlaygame = (
   socket: Socket,
   io: Server,
   players: Record<string, Player> = {},
-  resetPlayerState: (id: string) => void
+  resetPlayerState: (id: string) => void,
+  games: Record<string, any>
 ) => {
-  socket.on("playAgain", () => {
+  socket.on("playAgain", (isWinner: boolean) => {
     if (players[socket.id]) {
       players[socket.id].playAgain = true;
       const allReady = Object.keys(players).every(
         (id) => players[id].playAgain
       );
+
       if (allReady) {
+        const playerIds = Object.keys(players);
         Object.keys(players).forEach(resetPlayerState);
+
+        games["game1"] = {
+          player1: playerIds[0],
+          player2: playerIds[1],
+          currentTurn: playerIds[0],
+        };
         io.emit("gameRestarted", {
           message: "The game is restarting. Get ready!",
         });
+        console.log("Game restarted", players);
+        emitTurnStatus(playerIds[0], playerIds[1], io);
+        io.emit(
+          "updatePlayers",
+          Object.values(players).map(({ id, name, points }) => ({
+            id,
+            name,
+            points,
+          }))
+        );
         io.emit("gameStart");
-        emitTurnStatus(Object.keys(players)[0], Object.keys(players)[1], io);
       }
     }
   });
