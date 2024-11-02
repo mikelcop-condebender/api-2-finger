@@ -16,6 +16,6 @@ jobs:
 
       - name: connect and pull
         # run: scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -r ./dist/* jmc@ssh-pi.2-finger.com:/home/jmc/backend/dist
-        run: ssh jmc@ssh-pi.2-finger.com "cd ${{secrets.WORK_DIR}} && git checkout ${{secrets.MAIN_BRANCH}} && git pull"
+        run: ssh jmc@ssh-pi.2-finger.com "cd ~/backend && git checkout main && git pull"
       - name: cleanup
         run: rm -rf ~/.ssh
