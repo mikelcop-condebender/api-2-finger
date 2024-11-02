@@ -9,11 +9,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: install ssh keys
-        run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+      # - name: install ssh keys
+      #   run: |
+      #     echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+      #     chmod 600 ~/.ssh/id_rsa
+      #     ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
 
       - name: connect and pull
         run: ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST}} "cd ~/backend && git checkout ${{secrets.MAIN_BRANCH}} && git pull"
