@@ -1,7 +1,7 @@
 // utils.ts
 
 import { Server } from "socket.io";
-import { Game } from "./types/gameTypes";
+import { Game, Player } from "./types/gameTypes";
 
 export const getGameId = (
   games: Record<string, Game> = {},
