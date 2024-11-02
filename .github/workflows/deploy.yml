@@ -14,6 +14,9 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
 
+      - name: go to backend
+        run: cd ~/backend
+
       - name: connect and pull
         run: ssh -o StrictHostKeyChecking=no jmc@ssh-pi.2-finger.com "cd ~/backend && git checkout main && git pull"
 
