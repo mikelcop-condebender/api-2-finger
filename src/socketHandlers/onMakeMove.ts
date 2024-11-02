@@ -1,7 +1,7 @@
 import { Server, Socket } from "socket.io";
-import { Player } from "../types/types";
 import { emitTurnStatus, getGameId, getOpponentId } from "../utils";
 import { boxCount } from "../config";
+import { Player } from "../types/gameTypes";
 
 export const onMakeMove = (
   socket: Socket,

@@ -1,6 +1,6 @@
 import { Server, Socket } from "socket.io";
-import { Player } from "../types/types";
 import { emitTurnStatus } from "../utils";
+import { Player } from "../types/gameTypes";
 
 export const onStartGame = (
   socket: Socket,

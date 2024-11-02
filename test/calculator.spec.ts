@@ -13,5 +13,15 @@ describe('Test Calculator Class', ()=>{
         
     });
 
+    it('should return difference',()=>{
+        // arrange
+        const calc = new Calculator();
+        // act
+        const result = calc.subtract(2, 3);
+        // assert
+        expect(result).to.equal(-1);
+
+    })
+
 
 });

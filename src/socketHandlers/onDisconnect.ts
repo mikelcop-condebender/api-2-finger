@@ -1,5 +1,5 @@
 import { Server, Socket } from "socket.io";
-import { Player } from "../types/types";
+import { Player } from "../types/gameTypes";
 
 /**
  * Handles the disconnection of a player from the game.
