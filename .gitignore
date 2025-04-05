@@ -1,37 +1,47 @@
-# Node.js specific
-node_modules
+# Node modules
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+
+# TypeScript compiled output
+dist/
 
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Build directories
-dist/
-build/
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
 
-# TypeScript cache
-*.tsbuildinfo
-
-# Environment variables
-.env
-
-# Debugger files
-.vscode/
-
-# OS-specific files
+# OS files
 .DS_Store
 Thumbs.db
 
-# IDE-specific files
+# Env files
+.env
+.env.*
+
+# Test coverage and results
+coverage/
+.jest/
+test-results/
+
+# IDEs
+.vscode/
 .idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
+
+# CircleCI local CLI
+.circleci/config.yml.backup
+
+# Optional: lockfiles if you switch package managers
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Ignore compiled feature step definitions if generated
+*.step.js
+*.step.js.map
