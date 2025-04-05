@@ -14,7 +14,7 @@ jobs:
       - run:
           name: Install Dependencies
           command: pnpm install
-    unit-test:
+  unit-test:
     executor: node/default
     steps:
       - checkout
@@ -27,7 +27,6 @@ jobs:
       - run:
           name: Run Jest-Cucumber Tests
           command: pnpm test
-
 
   build-node:
     executor: node/default
