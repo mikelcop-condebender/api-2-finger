@@ -19,9 +19,9 @@ defineFeature(feature, (test) => {
       expect(response.statusCode).toBe(200);
     });
 
-    then('the message should be "Hello, JM"', () => {
+    then('the message should be "Hello, world!"', () => {
       const body = JSON.parse(response.body);
-      expect(body.message).toBe("Hello, JM!");
+      expect(body.message).toBe("Hello, world!");
     });
   });
 });
