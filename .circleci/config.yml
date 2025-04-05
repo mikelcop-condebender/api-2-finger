@@ -8,27 +8,21 @@ jobs:
     executor: node/default
     steps:
       - checkout
-      - run:
-          name: Enable Corepack
-          command: corepack enable
       - node/install-packages:
-          pkg-manager: pnpm
+          pkg-manager: npm
       - run:
           name: Run Jest-Cucumber Tests
-          command: pnpm test
+          command: npm test
 
   build-node:
     executor: node/default
     steps:
       - checkout
-      - run:
-          name: Enable Corepack
-          command: corepack enable
       - node/install-packages:
-          pkg-manager: pnpm
+          pkg-manager: npm
       - run:
           name: TypeScript Compile
-          command: pnpm tsc
+          command: npx tsc
       - run:
           name: Create artifact directory
           command: mkdir -p ~/artifacts
