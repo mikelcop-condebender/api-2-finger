@@ -14,9 +14,20 @@ jobs:
       - run:
           name: Install Dependencies
           command: pnpm install
+    unit-test:
+    executor: node/default
+    steps:
+      - checkout
+      - run:
+          name: Enable Corepack
+          command: corepack enable
+      - run:
+          name: Install Dependencies
+          command: pnpm install
       - run:
           name: Run Jest-Cucumber Tests
           command: pnpm test
+
 
   build-node:
     executor: node/default
@@ -53,9 +64,12 @@ workflows:
   build-and-test:
     jobs:
       - test-node
-      - build-node:
+      - unit-test:
           requires:
             - test-node
+      - build-node:
+          requires:
+            - unit-test
     # - deploy:
     #     requires:
     #       - build-node
