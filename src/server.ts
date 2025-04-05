@@ -4,7 +4,7 @@ const buildApp = () => {
   const app = Fastify();
 
   app.get("/", async (request, reply) => {
-    return { message: "Hello, JM!" };
+    return { message: "Hello, world!" };
   });
 
   return app;
